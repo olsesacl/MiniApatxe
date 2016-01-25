@@ -4,29 +4,31 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+
 public class NostreApatxe {
 	public static void main(String[] args) throws IOException {
 		final int PORT = 7000;
 		
-		String MissatgePeticio = null;
+		//String MissatgePeticio = null;
 		String NomFitxer;
 		
 		DataOutputStream SortidaClient = null;
         BufferedReader EntradaDesdeClient = null;
         
+        ServerSocket SocketAcollida = new ServerSocket(PORT);
+        
         Boolean continuar = true;
         
 		while(continuar){
 			try{
-				System.out.println("Esperant conexio...");
-				ServerSocket SocketAcollida = new ServerSocket(PORT);
+				System.out.println("\nEsperant conexio...");
+				
 				Socket SocketConnexio = SocketAcollida.accept();// Servidor esperant conexio
 				
 				SortidaClient = new DataOutputStream(SocketConnexio.getOutputStream());
 				EntradaDesdeClient = new BufferedReader(new InputStreamReader(SocketConnexio.getInputStream()));
 				
 				System.out.println("Conexio acceptada" + SocketConnexio.toString());
-				//SortidaClient.writeBytes("Conexio establerta\n");
 				
 				NomFitxer = EntradaDesdeClient.readLine();
 				System.out.println("Dades rebudes: " + NomFitxer);
@@ -42,28 +44,37 @@ public class NostreApatxe {
 				
 				//obtindre ruta actual
 				File miDir = new File (".");
-		        
-		        File file = new File(miDir.getCanonicalPath() + "/web/"+ NomFitxer);
-		        byte[] bFile = new byte[(int) file.length()];
-		        
-		        //convert file into array of bytes
-			    fileInputStream = new FileInputStream(file);
-			    fileInputStream.read(bFile);
-			    fileInputStream.close();
-			    
-			    //SortidaClient.write(bFile,0,bFile.length);
-			    SortidaClient.writeBytes(file + "\n");
+				
+				File file = new File(miDir.getCanonicalPath() + "/web/"+ NomFitxer);
+				
+				//comprobem que existeix el fitxer
+				if(file.exists()){
+					FileInputStream fos = new FileInputStream(file);
+			        
+			        byte[] bytes = new byte[1024];
+			        
+			        int count;
+			        while ((count = fos.read(bytes)) > 0) {
+			        	SortidaClient.write(bytes, 0, count);
+			        }
+			        
+			        fos.close();
+				} else {
+					System.out.println("El fichero " + miDir.getCanonicalPath() + "/web/"+ NomFitxer + " no existeix");
+				}
+		        		        
+		        SortidaClient.close();
 				
 				
-				System.out.println("Enviades dades al client: " + file);
-				SocketAcollida.close();//tanquem la conexio del servidor
+				System.out.println("Enviades dades al client");
+				
 				
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 			
-			
 		}
+		SocketAcollida.close();//tanquem la conexio del servidor
 	}
 
 }
