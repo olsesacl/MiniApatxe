@@ -7,9 +7,10 @@ import java.util.*;
 
 public class NostreApatxe {
 	public static void main(String[] args) throws IOException {
-		final int PORT = 7000;
 		
-		//String MissatgePeticio = null;
+		final int PORT = 7000;
+		final String RUTA= "/web/";
+		
 		String NomFitxer;
 		
 		DataOutputStream SortidaClient = null;
@@ -45,7 +46,7 @@ public class NostreApatxe {
 				//obtindre ruta actual
 				File miDir = new File (".");
 				
-				File file = new File(miDir.getCanonicalPath() + "/web/"+ NomFitxer);
+				File file = new File(miDir.getCanonicalPath() + RUTA+ NomFitxer);
 				
 				//comprobem que existeix el fitxer
 				if(file.exists()){
