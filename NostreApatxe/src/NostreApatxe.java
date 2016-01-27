@@ -168,7 +168,7 @@ public static void main(String[] args) throws Exception{
 			
 			//guardamos la configuracion en el archivo
 			FileWriter writer = new FileWriter(configFile);
-			props.store(writer, "CONFIGURACI�N MINIAPACHE");
+			props.store(writer, "CONFIGURACION MINIAPACHE");
 			writer.close();
 		}
 		 
