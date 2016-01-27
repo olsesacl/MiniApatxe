@@ -10,79 +10,13 @@ public class NostreApatxe implements Runnable{
 	private String ruta;
 	private int port;
 	private String errorFile;
+	private Socket SocketConnexio = null;
+	private ServerSocket SocketAcollida = null;
 	
 	public NostreApatxe(String ruta, int port, String errorFile) {
 		this.ruta = ruta;
 		this.port = port;
 		this.errorFile = errorFile;
-	}
-
-	public static void main(String[] args) throws Exception{
-		
-		
-		//archivo donde guardamos las propiedades
-		Properties props = new Properties();
-		File configFile = new File("config.properties");
-		
-		//comprobamos si existe
-		if(!configFile.exists()){
-			
-			//si no existe preparamos los datos que se cargaran en el archivo
-			props.setProperty("PORT", "7000");
-			props.setProperty("PATH", "/");
-			props.setProperty("ERRORFILE", "error.html");
-			
-			//guardamos la configuracion en el archivo
-			FileWriter writer = new FileWriter(configFile);
-			props.store(writer, "CONFIGURACIÓN MINIAPACHE");
-			writer.close();
-		}
-		 
-		FileReader reader = new FileReader(configFile);
-		 
-		 
-		// cargamos las propiedades del archivo
-		props.load(reader);
-		
-		reader.close();
-		
-		
-		//cargamos los datos, mandamos los datos por defecto para el caso de que no pueda cargar el archivo
-		
-		int port = Integer.parseInt(props.getProperty("PORT", "7000"));
-		String ruta = props.getProperty("PATH", "/");
-		String errorFile = props.getProperty("ERRORFILE", "error.html");
-		
-		
-		//verificamos si existe el fichero, sino creamos uno por defecto
-		checkErrorFile(errorFile, ruta);
-		
-		
-		//arrancamos el servidor en otro thread
-		Thread apache = new Thread(new NostreApatxe(ruta, port, errorFile));
-		
-		apache.start();
-		
-		boolean seguir = true;
-		BufferedReader comandos = new BufferedReader(new InputStreamReader(System.in));;
-		
-		while(seguir){
-			//leemos los comandos que se inserten por consola (de momento solo sera para cerrar el servidor)
-			if(comandos.readLine().equalsIgnoreCase("exit")){
-				seguir = false;
-			}
-		}
-		
-		//con esto interrumpimos que siga la ejecución del hilo
-		apache.interrupt();
-		
-		//como el hilo espera una conexión la realizamos para que se cierre debidamente
-		String ip = InetAddress.getLocalHost().getHostAddress();
-		Socket clientSocket = new Socket(ip, port);
-		DataOutputStream sortidaAlServidor = new DataOutputStream(clientSocket.getOutputStream());
-		sortidaAlServidor.writeBytes("\n");
-		clientSocket.close();
-		
 	}
 	
 	public static void checkErrorFile(String errorFile, String ruta){
@@ -122,21 +56,22 @@ public class NostreApatxe implements Runnable{
 		String NomFitxer;
 		DataOutputStream SortidaClient = null;
         BufferedReader EntradaDesdeClient = null;
+       
         
         
         try{
-        	ServerSocket SocketAcollida = new ServerSocket(this.port);
+        	this.SocketAcollida = new ServerSocket(this.port);
                         
     		while(!Thread.currentThread().isInterrupted()){
     			try{
     				System.out.println("\nEsperant conexio...");
     				
-    				Socket SocketConnexio = SocketAcollida.accept();// Servidor esperant conexio
+    				 this.SocketConnexio = this.SocketAcollida.accept();// Servidor esperant conexio
     				
-    				SortidaClient = new DataOutputStream(SocketConnexio.getOutputStream());
-    				EntradaDesdeClient = new BufferedReader(new InputStreamReader(SocketConnexio.getInputStream()));
+    				SortidaClient = new DataOutputStream(this.SocketConnexio.getOutputStream());
+    				EntradaDesdeClient = new BufferedReader(new InputStreamReader(this.SocketConnexio.getInputStream()));
     				
-    				System.out.println("Conexio acceptada" + SocketConnexio.toString());
+    				System.out.println("Conexio acceptada" + this.SocketConnexio.toString());
     				
     				NomFitxer = EntradaDesdeClient.readLine();
     				
@@ -201,15 +136,94 @@ public class NostreApatxe implements Runnable{
     				}
     				
     			}catch(Exception e){
-    				e.printStackTrace();
+    				//e.printStackTrace();
     			}
     			
     		}
-    		SocketAcollida.close();//tanquem la conexio del servidor
+    		this.SocketAcollida.close();//tanquem la conexio del servidor
         } catch(Exception e){
-        	e.printStackTrace();
+        	//e.printStackTrace();
         }
         
+	}
+	public void cerrar(){
+		try {
+			this.SocketAcollida.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		}
+	}
+	
+public static void main(String[] args) throws Exception{
+		
+		
+		//archivo donde guardamos las propiedades
+		Properties props = new Properties();
+		File configFile = new File("config.properties");
+		
+		//comprobamos si existe
+		if(!configFile.exists()){
+			
+			//si no existe preparamos los datos que se cargaran en el archivo
+			props.setProperty("PORT", "7000");
+			props.setProperty("PATH", "/");
+			props.setProperty("ERRORFILE", "error.html");
+			
+			//guardamos la configuracion en el archivo
+			FileWriter writer = new FileWriter(configFile);
+			props.store(writer, "CONFIGURACIÓN MINIAPACHE");
+			writer.close();
+		}
+		 
+		FileReader reader = new FileReader(configFile);
+		 
+		 
+		// cargamos las propiedades del archivo
+		props.load(reader);
+		
+		reader.close();
+		
+		
+		//cargamos los datos, mandamos los datos por defecto para el caso de que no pueda cargar el archivo
+		
+		int port = Integer.parseInt(props.getProperty("PORT", "7000"));
+		String ruta = props.getProperty("PATH", "/");
+		String errorFile = props.getProperty("ERRORFILE", "error.html");
+		
+		
+		//verificamos si existe el fichero, sino creamos uno por defecto
+		checkErrorFile(errorFile, ruta);
+		
+		
+		//arrancamos el servidor en otro thread
+		NostreApatxe a = new NostreApatxe(ruta, port, errorFile);
+		Thread apache = new Thread(a);
+		
+		apache.start();
+		
+		boolean seguir = true;
+		BufferedReader comandos = new BufferedReader(new InputStreamReader(System.in));;
+		
+		while(seguir){
+			//leemos los comandos que se inserten por consola (de momento solo sera para cerrar el servidor)
+			if(comandos.readLine().equalsIgnoreCase("exit")){
+				seguir = false;
+			}
+		}
+		
+		//con esto interrumpimos que siga la ejecución del hilo
+		apache.interrupt();
+		a.cerrar();
+		
+		
+		//como el hilo espera una conexión la realizamos para que se cierre debidamente
+		/*String ip = InetAddress.getLocalHost().getHostAddress();
+		Socket clientSocket = new Socket(ip, port);
+		DataOutputStream sortidaAlServidor = new DataOutputStream(clientSocket.getOutputStream());
+		sortidaAlServidor.writeBytes("\n");
+		clientSocket.close();*/
+		
 	}
 
 }
