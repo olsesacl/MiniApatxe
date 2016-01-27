@@ -23,15 +23,13 @@ public class NostreApatxe implements Runnable{
 		
 		BufferedWriter writer = null;
 		
-		//obtindre ruta actual
-		File miDir = new File (".");
-		
+
 		try {
-			File file = new File(miDir.getCanonicalPath() + ruta + errorFile);
+			File file = new File(ruta + errorFile);
 			
 			if(!file.isFile()){
 				
-				//añadimos a la variable los datos que se insertaran en el archivo
+				//aï¿½adimos a la variable los datos que se insertaran en el archivo
 				String content = "<html><head><title>Error al acceder al fichero</title></head>";
 				content += "<body><h1>El fichero al que intenta acceder no existe</h1></body></html>";
 				
@@ -86,10 +84,8 @@ public class NostreApatxe implements Runnable{
 	    				NomFitxer = NomFitxer.substring(0,NomFitxer.length()-9);
 	    				
 	    				
-	    				//obtindre ruta actual
-	    				File miDir = new File (".");
 	    				
-	    				File file = new File(miDir.getCanonicalPath() + this.ruta + NomFitxer);
+	    				File file = new File(this.ruta + NomFitxer);
 	    				
 	    				//comprobem que existeix el fitxer
 	    				if(file.exists() && file.isFile()){
@@ -107,11 +103,11 @@ public class NostreApatxe implements Runnable{
 	    			        System.out.println("Enviades dades al client");
 	    			        
 	    				} else {
-	    					System.out.println("El fichero " + miDir.getCanonicalPath() + this.ruta+ NomFitxer + " no existeix");
+	    					System.out.println("El fichero " + this.ruta+ NomFitxer + " no existeix");
 	    					
 	    					//en caso de que se intente acceder a un archivo html se devuelve el archivo de error
 	    					if(NomFitxer.indexOf(".html")!=-1){
-	    						File fileError = new File(miDir.getCanonicalPath() + this.ruta + this.errorFile);
+	    						File fileError = new File(this.ruta + this.errorFile);
 		    					FileInputStream fos = new FileInputStream(fileError);
 		    			        
 		    			        byte[] bytes = new byte[1024];
@@ -132,7 +128,7 @@ public class NostreApatxe implements Runnable{
     				} else if(!Thread.currentThread().isInterrupted()){
     					System.out.println("No s'ha rebut nom de fitxer");
     				} else {
-    					System.out.println("Rebuda señal per a tancar el servidor");
+    					System.out.println("Rebuda seï¿½al per a tancar el servidor");
     				}
     				
     			}catch(Exception e){
@@ -167,12 +163,12 @@ public static void main(String[] args) throws Exception{
 			
 			//si no existe preparamos los datos que se cargaran en el archivo
 			props.setProperty("PORT", "7000");
-			props.setProperty("PATH", "/");
+			props.setProperty("PATH", "./");
 			props.setProperty("ERRORFILE", "error.html");
 			
 			//guardamos la configuracion en el archivo
 			FileWriter writer = new FileWriter(configFile);
-			props.store(writer, "CONFIGURACIÓN MINIAPACHE");
+			props.store(writer, "CONFIGURACIï¿½N MINIAPACHE");
 			writer.close();
 		}
 		 
@@ -188,7 +184,7 @@ public static void main(String[] args) throws Exception{
 		//cargamos los datos, mandamos los datos por defecto para el caso de que no pueda cargar el archivo
 		
 		int port = Integer.parseInt(props.getProperty("PORT", "7000"));
-		String ruta = props.getProperty("PATH", "/");
+		String ruta = props.getProperty("PATH", "./");
 		String errorFile = props.getProperty("ERRORFILE", "error.html");
 		
 		
@@ -212,12 +208,12 @@ public static void main(String[] args) throws Exception{
 			}
 		}
 		
-		//con esto interrumpimos que siga la ejecución del hilo
+		//con esto interrumpimos que siga la ejecuciï¿½n del hilo
 		apache.interrupt();
 		a.cerrar();
 		
 		
-		//como el hilo espera una conexión la realizamos para que se cierre debidamente
+		//como el hilo espera una conexiï¿½n la realizamos para que se cierre debidamente
 		/*String ip = InetAddress.getLocalHost().getHostAddress();
 		Socket clientSocket = new Socket(ip, port);
 		DataOutputStream sortidaAlServidor = new DataOutputStream(clientSocket.getOutputStream());
