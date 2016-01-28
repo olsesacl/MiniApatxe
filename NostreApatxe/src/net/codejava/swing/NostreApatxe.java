@@ -37,7 +37,7 @@ public class NostreApatxe implements Runnable{
 			
 			if(!file.isFile()){
 				
-				//añadimos a la variable los datos que se insertaran en el archivo
+				//aï¿½adimos a la variable los datos que se insertaran en el archivo
 				String content = "<html><head><title>Error al acceder al fichero</title></head>";
 				content += "<body><h1>El fichero al que intenta acceder no existe</h1></body></html>";
 				
@@ -104,10 +104,15 @@ public class NostreApatxe implements Runnable{
 	    				
 	    				//comprobem que existeix el fitxer
 	    				if(file.exists() && file.isFile()){
+	    					
+	    					//cabecera
+	    			        Date today = new Date(); String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
+	    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
+	    					
 	    					FileInputStream fos = new FileInputStream(file);
 	    			        
 	    			        byte[] bytes = new byte[1024];
-	    			        
+
 	    			        int count;
 	    			        while ((count = fos.read(bytes)) > 0) {
 	    			        	SortidaClient.write(bytes, 0, count);
@@ -131,12 +136,20 @@ public class NostreApatxe implements Runnable{
 		    			        
 		    			        byte[] bytes = new byte[1024];
 		    			        
+		    			      //cabecera
+		    			        Date today = new Date(); String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
+		    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
+		    			        
 		    			        int count;
 		    			        while ((count = fos.read(bytes)) > 0) {
 		    			        	SortidaClient.write(bytes, 0, count);
 		    			        }
 		    			        
 		    			        fos.close();
+	    					} else{
+	    						Date today = new Date(); String httpResponse = "HTTP/1.0 404 Not Found\r\n\r\n";
+		    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
+		    			        this.SocketConnexio.getOutputStream().write(httpResponse.getBytes("UTF-8"));
 	    					}
 	    					
 	    				}
@@ -171,76 +184,4 @@ public class NostreApatxe implements Runnable{
 			//e.printStackTrace();
 		}
 	}
-	
-public static void main(String[] args) throws Exception{
-		
-		
-		//archivo donde guardamos las propiedades
-		Properties props = new Properties();
-		File configFile = new File("config.properties");
-		
-		//comprobamos si existe
-		if(!configFile.exists()){
-			
-			//si no existe preparamos los datos que se cargaran en el archivo
-			props.setProperty("PORT", "7000");
-			props.setProperty("PATH", "./");
-			props.setProperty("ERRORFILE", "error.html");
-			
-			//guardamos la configuracion en el archivo
-			FileWriter writer = new FileWriter(configFile);
-			props.store(writer, "CONFIGURACION MINIAPACHE");
-			writer.close();
-		}
-		 
-		FileReader reader = new FileReader(configFile);
-		 
-		 
-		// cargamos las propiedades del archivo
-		props.load(reader);
-		
-		reader.close();
-		
-		
-		//cargamos los datos, mandamos los datos por defecto para el caso de que no pueda cargar el archivo
-		
-		int port = Integer.parseInt(props.getProperty("PORT", "7000"));
-		String ruta = props.getProperty("PATH", "./");
-		String errorFile = props.getProperty("ERRORFILE", "error.html");
-		
-		
-		//verificamos si existe el fichero, sino creamos uno por defecto
-		//checkErrorFile();
-		
-		
-		//arrancamos el servidor en otro thread
-		NostreApatxe a = new NostreApatxe(ruta, port, errorFile,null);
-		Thread apache = new Thread(a);
-		
-		apache.start();
-		
-		boolean seguir = true;
-		BufferedReader comandos = new BufferedReader(new InputStreamReader(System.in));;
-		
-		while(seguir){
-			//leemos los comandos que se inserten por consola (de momento solo sera para cerrar el servidor)
-			if(comandos.readLine().equalsIgnoreCase("exit")){
-				seguir = false;
-			}
-		}
-		
-		//con esto interrumpimos que siga la ejecuciï¿½n del hilo
-		apache.interrupt();
-		a.cerrar();
-		
-		
-		//como el hilo espera una conexiï¿½n la realizamos para que se cierre debidamente
-		/*String ip = InetAddress.getLocalHost().getHostAddress();
-		Socket clientSocket = new Socket(ip, port);
-		DataOutputStream sortidaAlServidor = new DataOutputStream(clientSocket.getOutputStream());
-		sortidaAlServidor.writeBytes("\n");
-		clientSocket.close();*/
-		
-	}
-
 }

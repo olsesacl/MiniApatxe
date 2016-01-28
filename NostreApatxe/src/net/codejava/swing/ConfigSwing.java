@@ -11,6 +11,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Properties;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -34,14 +40,15 @@ public class ConfigSwing extends JFrame {
 	private JLabel labelPort = new JLabel("Puerto: ");
 	private JLabel labelError = new JLabel("Archivo de error: ");
 	
-	private JTextField textPath = new JTextField(20);
-	private JTextField textPort = new JTextField(20);
-	private JTextField textError = new JTextField(20);
+	private JTextField textPath = new JTextField(15);
+	private JTextField textPort = new JTextField(15);
+	private JTextField textError = new JTextField(15);
 	
 	private JButton buttonSave = new JButton("Guardar");
 	
 	private JButton buttonRun = new JButton("Iniciar");
 	private JButton buttonStop = new JButton("Parar");
+	private JButton buttonClear = new JButton("Limpiar log");
 	
 	private JTextArea textArea = new JTextArea(15, 35);
 	JScrollPane scroll = new JScrollPane (textArea);
@@ -75,10 +82,12 @@ public class ConfigSwing extends JFrame {
 		add(labelPath, constraints);
 		
 		constraints.gridx = 1;
+		constraints.gridwidth = 2;
 		add(textPath, constraints);
 		
 		constraints.gridy = 1;
 		constraints.gridx = 0;
+		constraints.gridwidth = 1;
 		add(labelPort, constraints);
 		
 		constraints.gridx = 1;
@@ -98,7 +107,6 @@ public class ConfigSwing extends JFrame {
 		add(buttonSave, constraints);
 		
 		constraints.gridx = 1;
-		constraints.gridwidth = 2;
 		constraints.anchor = GridBagConstraints.CENTER;
 		add(buttonRun, constraints);
 		
@@ -106,6 +114,10 @@ public class ConfigSwing extends JFrame {
 		constraints.anchor = GridBagConstraints.CENTER;
 		buttonStop.setEnabled(false);
 		add(buttonStop, constraints);
+		
+		constraints.gridx = 3;
+		constraints.anchor = GridBagConstraints.CENTER;
+		add(buttonClear, constraints);
 		
 		
 		constraints.gridy = 6;
@@ -137,7 +149,10 @@ public class ConfigSwing extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					textArea.setText("Iniciando servidor\n"+ textArea.getText());
+					String localIP = displayInterfaceInformation();
+					textArea.setText("Iniciando servidor en ip "+ localIP +" y puerto " + textPort.getText()+ "\n"+ textArea.getText());
+					textArea.setText("Para verificar su funcionamiento escriba en su navegador:\n" + textArea.getText());
+					textArea.setText(localIP + ":" + textPort.getText() + "/" + textError.getText() +"\n"+ textArea.getText());
 					//model.addElement("Iniciando servidor");
 					
 					apache = new NostreApatxe(textPath.getText(), Integer.parseInt(textPort.getText()), textError.getText(), textArea);
@@ -183,6 +198,13 @@ public class ConfigSwing extends JFrame {
 					
 					//model.addElement("Error al cerrar el servidor: " + ex.getMessage());
 				}
+			}
+		});
+		
+		buttonClear.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				textArea.setText("");
 			}
 		});
 		
@@ -242,5 +264,33 @@ public class ConfigSwing extends JFrame {
 				new ConfigSwing();
 			}
 		});
+	}
+	
+	static String displayInterfaceInformation() throws SocketException {
+		
+		int check =0;
+		
+		Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+        for (NetworkInterface netint : Collections.list(nets)){
+        	
+		
+	        Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+	        for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+	        	
+	        	if(!inetAddress.equals("127.0.0.1") && !inetAddress.equals("127.0.1.1") && check>0){
+	        		String ip = String.valueOf(inetAddress);
+	        		
+	        		return ip.substring(1,ip.length());
+	        	}
+	        		
+	        	
+	        	check++;
+	        }
+        	/*for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+                System.out.printf("InetAddress: %s\n", inetAddress);
+            }*/
+	        
+        }
+		return null;
 	}
 }
