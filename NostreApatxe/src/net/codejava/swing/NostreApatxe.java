@@ -4,7 +4,7 @@ package net.codejava.swing;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
+//import java.util.*;
 
 import javax.swing.JTextArea;
 
@@ -106,7 +106,7 @@ public class NostreApatxe implements Runnable{
 	    				if(file.exists() && file.isFile()){
 	    					
 	    					//cabecera
-	    			        Date today = new Date(); String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
+	    			        String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
 	    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
 	    					
 	    					FileInputStream fos = new FileInputStream(file);
@@ -137,7 +137,7 @@ public class NostreApatxe implements Runnable{
 		    			        byte[] bytes = new byte[1024];
 		    			        
 		    			      //cabecera
-		    			        Date today = new Date(); String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
+		    			        String httpResponse = "HTTP/1.1 200 OK\r\n\r\n";
 		    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
 		    			        
 		    			        int count;
@@ -147,7 +147,7 @@ public class NostreApatxe implements Runnable{
 		    			        
 		    			        fos.close();
 	    					} else{
-	    						Date today = new Date(); String httpResponse = "HTTP/1.0 404 Not Found\r\n\r\n";
+	    						String httpResponse = "HTTP/1.0 404 Not Found\r\n\r\n";
 		    			        SortidaClient.write(httpResponse.getBytes("UTF-8"));
 		    			        this.SocketConnexio.getOutputStream().write(httpResponse.getBytes("UTF-8"));
 	    					}
