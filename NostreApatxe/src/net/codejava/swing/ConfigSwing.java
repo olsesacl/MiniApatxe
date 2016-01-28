@@ -3,6 +3,7 @@ package net.codejava.swing;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -13,19 +14,26 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-/**
- * This program demonstrates using java.util.Properties class to read and write
- * settings for Java application.
- * @author www.codejava.net
- *
- */
 public class ConfigSwing extends JFrame {
 	/**
 	 * 
@@ -35,17 +43,40 @@ public class ConfigSwing extends JFrame {
 	private Properties configProps;
 	
 	private JLabel labelPath = new JLabel("Ruta: ");
-	private JLabel labelPort = new JLabel("Port number: ");
+	private JLabel labelPort = new JLabel("Puerto: ");
 	private JLabel labelError = new JLabel("Archivo de error: ");
 	
 	private JTextField textPath = new JTextField(20);
 	private JTextField textPort = new JTextField(20);
 	private JTextField textError = new JTextField(20);
 	
-	private JButton buttonSave = new JButton("Save");
+	private JButton buttonSave = new JButton("Guardar");
+	
+	private JButton buttonRun = new JButton("Iniciar");
+	private JButton buttonStop = new JButton("Parar");
+	
+	private JTextArea textArea = new JTextArea(15, 35);
+	JScrollPane scroll = new JScrollPane (textArea);
+	//DefaultListModel model = new DefaultListModel();
+	//private JList list = new JList(model);
+    //private JScrollPane scrollPane = new JScrollPane(list);
+    
+    
+	private NostreApatxe apache = null;
+	private Thread hiloApache = null;
 	
 	public ConfigSwing() {
 		super("Configura tu MiniApatxe");
+		
+		//list = new JList(model);
+
+        //JScrollPane scrollPane = new JScrollPane(list);
+        //scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        //list.setSelectionModel((ListSelectionModel) new DisabledItemSelectionModel());
+		
+		//scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+	    //list.setSelectionModel((ListSelectionModel) new DisabledItemSelectionModel());        
+        
 		setLayout(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.gridx = 0;
@@ -74,9 +105,31 @@ public class ConfigSwing extends JFrame {
 		
 		constraints.gridy = 4;
 		constraints.gridx = 0;
-		constraints.gridwidth = 2;
+		constraints.gridwidth = 1;
 		constraints.anchor = GridBagConstraints.CENTER;
 		add(buttonSave, constraints);
+		
+		constraints.gridx = 1;
+		constraints.gridwidth = 2;
+		constraints.anchor = GridBagConstraints.CENTER;
+		add(buttonRun, constraints);
+		
+		constraints.gridx = 2;
+		constraints.anchor = GridBagConstraints.CENTER;
+		buttonStop.setEnabled(false);
+		add(buttonStop, constraints);
+		
+		
+		constraints.gridy = 6;
+		constraints.gridx = 0;
+		constraints.gridwidth = 4;
+		constraints.weightx = 1.0;
+		constraints.weighty = 1.0;
+		
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		add(scroll, constraints);
+        //add(scrollPane, constraints);
 		
 		buttonSave.addActionListener(new ActionListener() {
 			@Override
@@ -84,13 +137,76 @@ public class ConfigSwing extends JFrame {
 				try {
 					saveProperties();
 					JOptionPane.showMessageDialog(ConfigSwing.this, 
-							"La configuracion se han guardado correctamente!");		
+							"La configuracion se han guardado correctamente!");	
 				} catch (IOException ex) {
 					JOptionPane.showMessageDialog(ConfigSwing.this, 
 							"Error guardando el archivo de configuracion: " + ex.getMessage());		
 				}
 			}
 		});
+		
+		buttonRun.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					textArea.setText("Iniciando servidor\n"+ textArea.getText());
+					//model.addElement("Iniciando servidor");
+					
+					apache = new NostreApatxe(textPath.getText(), Integer.parseInt(textPort.getText()), textError.getText(), textArea);
+					//verificamos si existe el fichero, sino creamos uno por defecto
+					apache.checkErrorFile();
+					
+					
+					//arrancamos el servidor en otro thread
+					hiloApache = new Thread(apache);
+					
+					hiloApache.start();
+					buttonStop.setEnabled(true);
+					buttonRun.setEnabled(false);
+					buttonSave.setEnabled(false);
+					
+					/*JOptionPane.showMessageDialog(ConfigSwing.this, 
+							"La configuracion se han guardado correctamente!");*/
+				} catch (Exception ex) {
+					/*JOptionPane.showMessageDialog(ConfigSwing.this, 
+							"Error al iniciar el servidor: " + ex.getMessage());*/	
+					textArea.setText("Error al iniciar el servidor: " + ex.getMessage() + "\n"+ textArea.getText());
+					
+					//model.addElement("Error al iniciar el servidor: " + ex.getMessage());
+				}
+			}
+		});
+		
+		buttonStop.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					textArea.setText("Parando servidor\n"+ textArea.getText());
+					//model.addElement("Parando Servidor");
+					
+					hiloApache.interrupt();
+					apache.cerrar();
+					buttonStop.setEnabled(false);
+					buttonRun.setEnabled(true);
+					buttonSave.setEnabled(true);
+
+				} catch (Exception ex) {
+					textArea.setText("Error al cerrar el servidor: " + ex.getMessage() + "\n");
+					
+					//model.addElement("Error al cerrar el servidor: " + ex.getMessage());
+				}
+			}
+		});
+		
+		
+		/*textArea.addCaretListener(new CaretListener() {
+
+	        @Override
+	        public void caretUpdate(CaretEvent e) {
+	            System.out.println("text field have changed");
+
+			}
+	    });*/
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
@@ -139,4 +255,12 @@ public class ConfigSwing extends JFrame {
 			}
 		});
 	}
+	
+	class DisabledItemSelectionModel extends DefaultListSelectionModel {
+
+        @Override
+        public void setSelectionInterval(int index0, int index1) {
+            super.setSelectionInterval(-1, -1);
+        }
+    }
 }
