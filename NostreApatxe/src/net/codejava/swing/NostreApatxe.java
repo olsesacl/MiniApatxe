@@ -6,9 +6,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JTextArea;
-import javax.xml.crypto.NoSuchMechanismException;
 
 
 public class NostreApatxe implements Runnable{
