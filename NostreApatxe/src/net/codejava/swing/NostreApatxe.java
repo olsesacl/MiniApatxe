@@ -27,7 +27,7 @@ public class NostreApatxe implements Runnable{
 		//log.append("Dentro del server\n");
 	}
 	
-	public void checkErrorFile(){
+	protected void checkErrorFile(){
 		
 		BufferedWriter writer = null;
 		
@@ -176,7 +176,7 @@ public class NostreApatxe implements Runnable{
         }
         
 	}
-	public void cerrar(){
+	protected void cerrar(){
 		try {
 			this.SocketAcollida.close();
 		} catch (Exception e) {
